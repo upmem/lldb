@@ -38,7 +38,7 @@ class Dpu;
 class DpuRank {
 public:
   DpuRank(dpu_type_t backend_type = FUNCTIONAL_SIMULATOR,
-          const char *profile = "");
+          const char *profile = "talkalot=false");
   bool Open();
   bool IsValid();
   bool Reset();

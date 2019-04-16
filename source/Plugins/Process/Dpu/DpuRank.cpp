@@ -53,10 +53,14 @@ bool DpuRank::Open() {
   std::lock_guard<std::mutex> guard(m_lock);
 
   int ret = dpu_cni_get_rank_of_type(m_type, m_profile, &m_link);
+  fprintf(stderr, "get_rank=>%d\n", ret);
   if (ret != DPU_CNI_SUCCESS)
     return false;
   dpu_cni_get_target_description(m_link, &m_desc);
 
+  fprintf(stderr, "rank desc threads %d dpus %d\n", m_desc.dpu.nr_of_threads,
+          m_desc.topology.nr_of_control_interfaces *
+              m_desc.topology.nr_of_dpus_per_control_interface);
   nr_threads = m_desc.dpu.nr_of_threads;
   nr_dpus = m_desc.topology.nr_of_control_interfaces *
             m_desc.topology.nr_of_dpus_per_control_interface;
@@ -127,8 +131,10 @@ bool Dpu::LoadElf(const FileSpec &elf_file_path) {
 
   DataExtractor text_content;
   exe->ReadSectionData(section_text, text_content);
+  fprintf(stderr, "text +%ld\n", text_content.GetByteSize());
   DataExtractor data_content;
   exe->ReadSectionData(section_data, data_content);
+  fprintf(stderr, "data +%ld\n", data_content.GetByteSize());
 
   {
     std::lock_guard<std::mutex> guard(m_rank->GetLock());
@@ -174,6 +180,15 @@ bool Dpu::PollStatus() {
 
   int res = dpu_cni_poll_for_dpu(m_link, m_slice_id, m_dpu_id, &dpu_is_running,
                                  &dpu_is_in_fault);
+  {
+    static bool last_run, last_fault;
+    if (last_run != dpu_is_running || last_fault != dpu_is_in_fault) {
+      fprintf(stderr, ">>> DPU > %d run %d fault %d\n", res, dpu_is_running,
+              dpu_is_in_fault);
+      last_run = dpu_is_running;
+      last_fault = dpu_is_in_fault;
+    }
+  }
   return res == DPU_CNI_SUCCESS && !dpu_is_in_fault;
 }
 
