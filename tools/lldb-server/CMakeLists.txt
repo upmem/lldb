@@ -68,7 +68,6 @@ target_link_libraries(lldb-server PRIVATE ${LLDB_SYSTEM_LIBS})
 
 if(HAVE_LIBDPU)
 # Specialized lldb-server for DPU targets
-set(LIBDPU dpucni)
 
 set(LLDB_PLUGINS)
 
@@ -91,12 +90,11 @@ add_lldb_tool(lldb-server-dpu INCLUDE_IN_SUITE
       lldbInterpreter
       ${LLDB_PLUGINS}
       ${LLDB_SYSTEM_LIBS}
-      ${LIBDPU}
 
     LINK_COMPONENTS
       Support
 )
 
-target_link_libraries(lldb-server-dpu PRIVATE ${LLDB_SYSTEM_LIBS})
+target_link_libraries(lldb-server-dpu PRIVATE ${LLDB_SYSTEM_LIBS} "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../backends/build/cni/libdpucni-2019.2.0.so")
 target_compile_options(lldb-server-dpu PRIVATE -DUSE_DPU)
 endif()
