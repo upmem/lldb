@@ -172,7 +172,7 @@ bool Dpu::Boot() {
   return true;
 }
 
-bool Dpu::PollStatus() {
+StateType Dpu::PollStatus() {
   std::lock_guard<std::mutex> guard(m_rank->GetLock());
 
   bool dpu_is_running = false;
@@ -189,7 +189,13 @@ bool Dpu::PollStatus() {
       last_fault = dpu_is_in_fault;
     }
   }
-  return res == DPU_CNI_SUCCESS && !dpu_is_in_fault;
+  if (dpu_is_in_fault) {
+    return StateType::eStateCrashed;
+  }
+  if (!dpu_is_running) {
+    return StateType::eStateStopped;
+  }
+  return StateType::eStateRunning;
 }
 
 bool Dpu::StopThreads() {

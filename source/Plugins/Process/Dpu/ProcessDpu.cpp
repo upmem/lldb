@@ -88,7 +88,7 @@ ProcessDpu::Factory::Launch(ProcessLaunchInfo &launch_info,
     return Status("Cannot get a DPU rank").ToError();
   rank->Reset();
 
-  assert(launch_info.GetArchitecture() == k_dpu_arch);
+  // assert(launch_info.GetArchitecture() == k_dpu_arch);
   Dpu *dpu = rank->GetDpu(0);
 
   dpu->LoadElf(launch_info.GetExecutableFile());
@@ -155,14 +155,28 @@ ProcessDpu::ProcessDpu(::pid_t pid, int terminal_fd, NativeDelegate &delegate,
   SetState(StateType::eStateStopped, false);
 }
 
-void ProcessDpu::InterfaceTimerCallback() { m_dpu->PollStatus(); }
+void ProcessDpu::InterfaceTimerCallback() {
+  SetState(m_dpu->PollStatus(), true);
+}
 
 bool ProcessDpu::SupportHardwareSingleStepping() const { return false; }
 
 Status ProcessDpu::Resume(const ResumeActionList &resume_actions) {
   Log *log(ProcessPOSIXLog::GetLogIfAllCategoriesSet(POSIX_LOG_PROCESS));
-  LLDB_LOG(log, "pid {0}", GetID());
+  lldb::tid_t thread_id = GetID();
+  LLDB_LOG(log, "pid {0}", thread_id);
 
+  const ResumeAction *action =
+      resume_actions.GetActionForThread(thread_id, true);
+  if (action == NULL) {
+    LLDB_LOG(log, "No action to perform...");
+    return Status();
+  }
+  assert(action->tid == thread_id || action->tid == LLDB_INVALID_THREAD_ID);
+  if (action->state != lldb::StateType::eStateRunning) {
+    LLDB_LOG(log, "Resume function is not asked to run the threads... weird");
+    return Status();
+  }
   if (!m_dpu->ResumeThreads())
     return Status("CNI cannot resume");
 

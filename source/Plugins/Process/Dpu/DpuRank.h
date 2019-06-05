@@ -67,7 +67,7 @@ public:
 
   bool LoadElf(const FileSpec &elf_file_path);
   bool Boot();
-  bool PollStatus();
+  lldb::StateType PollStatus();
   bool ResumeThreads();
   bool StopThreads();
 
