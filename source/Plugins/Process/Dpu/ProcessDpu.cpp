@@ -143,10 +143,7 @@ ProcessDpu::ProcessDpu(::pid_t pid, int terminal_fd, NativeDelegate &delegate,
   timerfd_settime(tfd, 0, &polling_spec, nullptr);
   assert(m_timer_handle && status.Success());
 
-  for (int idx = 0; idx < m_dpu->GetNrThreads(); idx++) {
-    m_threads.push_back(llvm::make_unique<ThreadDpu>(*this, pid | idx, idx));
-    // ThreadWasCreated(thread);
-  }
+  m_threads.push_back(llvm::make_unique<ThreadDpu>(*this, pid, 0));
   SetCurrentThreadID(pid);
 
   m_dpu->StopThreads();
@@ -156,7 +153,13 @@ ProcessDpu::ProcessDpu(::pid_t pid, int terminal_fd, NativeDelegate &delegate,
 }
 
 void ProcessDpu::InterfaceTimerCallback() {
-  SetState(m_dpu->PollStatus(), true);
+  unsigned int exit_status;
+  StateType current_state = m_dpu->PollStatus(&exit_status);
+  if (current_state != StateType::eStateInvalid) {
+    if (current_state == StateType::eStateExited)
+      SetExitStatus(WaitStatus(WaitStatus::Exit, (uint8_t)exit_status), true);
+    SetState(current_state, true);
+  }
 }
 
 bool ProcessDpu::SupportHardwareSingleStepping() const { return false; }

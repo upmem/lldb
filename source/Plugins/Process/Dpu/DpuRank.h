@@ -67,7 +67,7 @@ public:
 
   bool LoadElf(const FileSpec &elf_file_path);
   bool Boot();
-  lldb::StateType PollStatus();
+  lldb::StateType PollStatus(unsigned int *exit_status);
   bool ResumeThreads();
   bool StopThreads();
 
@@ -91,6 +91,8 @@ private:
   int nr_of_work_registers_per_thread;
   dpulink_t m_link;
   struct _dpu_context_t m_context;
+  bool dpu_is_running = false;
+  bool dpu_is_in_fault = false;
 };
 
 } // namespace dpu
