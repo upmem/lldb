@@ -12,6 +12,9 @@
 #include <signal.h>
 #include <sstream>
 
+// For llvm::to_string
+#include "llvm/Support/ScopedPrinter.h"
+
 #include "ProcessDpu.h"
 #include "RegisterContextDpu.h"
 
@@ -31,8 +34,7 @@ ThreadDpu::ThreadDpu(ProcessDpu &process, lldb::tid_t tid, int index)
       m_reg_context_up(llvm::make_unique<RegisterContextDpu>(*this, process)) {}
 
 std::string ThreadDpu::GetName() {
-  // ProcessDpu &process = GetProcess();
-  return "TODO DPUthreadNN";
+  return "DPUthread" + llvm::to_string(m_thread_index);
 }
 
 lldb::StateType ThreadDpu::GetState() { return m_state; }
