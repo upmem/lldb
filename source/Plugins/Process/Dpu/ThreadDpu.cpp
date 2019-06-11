@@ -42,6 +42,7 @@ bool ThreadDpu::GetStopReason(ThreadStopInfo &stop_info,
   Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_THREAD));
 
   description.clear();
+  stop_info.details.signal.signo = 0;
 
   switch (m_state) {
   case eStateStopped:
@@ -51,6 +52,7 @@ bool ThreadDpu::GetStopReason(ThreadStopInfo &stop_info,
   case eStateUnloaded:
     // TODO get info from Process (polling status + rank context)
     // cached version will be in m_state ... ???
+    description = "Thread finished";
     stop_info.reason = eStopReasonNone;
     // eStopReasonBreakpoint, eStopReasonException, eStopReasonThreadExiting
 
