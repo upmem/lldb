@@ -24,6 +24,8 @@
 #include "lldb/Core/Section.h"
 #include "lldb/Symbol/ObjectFile.h"
 
+#include "RegisterContextDpu.h"
+
 extern "C" {
 #include <cni.h>
 #include <dpu.h>
@@ -188,7 +190,7 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
     dpu_cni_extract_pcs_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
     dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
 
-    *exit_status = m_context.registers[21];
+    *exit_status = m_context.registers[lldb_private::r21_dpu];
     return StateType::eStateExited;
   }
   return StateType::eStateRunning;
