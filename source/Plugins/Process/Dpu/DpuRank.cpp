@@ -176,6 +176,7 @@ bool Dpu::Boot() {
 
 StateType Dpu::PollStatus(unsigned int *exit_status) {
   std::lock_guard<std::mutex> guard(m_rank->GetLock());
+  StateType result_state = StateType::eStateRunning;
 
   if (!dpu_is_running)
     return StateType::eStateInvalid;
@@ -183,17 +184,19 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
   int res = dpu_cni_poll_for_dpu(m_link, m_slice_id, m_dpu_id, &dpu_is_running,
                                  &dpu_is_in_fault);
   if (dpu_is_in_fault) {
-    return StateType::eStateCrashed;
+    dpu_is_running = false;
+    result_state = StateType::eStateStopped;
   } else if (!dpu_is_running) {
-    fprintf(stderr, "Thread just finished %i, %i\n", dpu_is_running, dpu_is_in_fault);
-
-    dpu_cni_extract_pcs_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
-    dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
-
     *exit_status = m_context.registers[lldb_private::r21_dpu];
-    return StateType::eStateExited;
+    result_state = StateType::eStateExited;
+  } else {
+    return StateType::eStateRunning;
   }
-  return StateType::eStateRunning;
+
+  dpu_cni_extract_pcs_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+  dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+
+  return result_state;
 }
 
 bool Dpu::StopThreads() {
