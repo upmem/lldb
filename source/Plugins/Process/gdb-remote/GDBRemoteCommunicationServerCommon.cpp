@@ -194,7 +194,7 @@ GDBRemoteCommunicationServerCommon::Handle_qHostInfo(
 
   // $cputype:16777223;cpusubtype:3;ostype:Darwin;vendor:apple;endian:little;ptrsize:8;#00
 
-  ArchSpec host_arch(HostInfo::GetArchitecture());
+  ArchSpec host_arch("dpu-upmem-dpurte");
   const llvm::Triple &host_triple = host_arch.GetTriple();
   response.PutCString("triple:");
   response.PutCStringAsRawHex8(host_triple.getTriple().c_str());
