@@ -187,7 +187,6 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
     dpu_is_running = false;
     result_state = StateType::eStateStopped;
   } else if (!dpu_is_running) {
-    *exit_status = m_context.registers[lldb_private::r21_dpu];
     result_state = StateType::eStateExited;
   } else {
     return StateType::eStateRunning;
@@ -195,6 +194,7 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
 
   dpu_cni_extract_pcs_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
   dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+  *exit_status = m_context.registers[lldb_private::r21_dpu];
 
   return result_state;
 }
