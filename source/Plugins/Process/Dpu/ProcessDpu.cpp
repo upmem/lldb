@@ -143,7 +143,9 @@ ProcessDpu::ProcessDpu(::pid_t pid, int terminal_fd, NativeDelegate &delegate,
   timerfd_settime(tfd, 0, &polling_spec, nullptr);
   assert(m_timer_handle && status.Success());
 
-  m_threads.push_back(llvm::make_unique<ThreadDpu>(*this, pid, 0));
+  for (int thread_id = 0; thread_id < m_dpu->GetNrThreads(); thread_id++) {
+    m_threads.push_back(llvm::make_unique<ThreadDpu>(*this, pid | thread_id, thread_id));
+  }
   SetCurrentThreadID(pid);
 
   m_dpu->StopThreads();
@@ -364,4 +366,8 @@ void ProcessDpu::GetThreadContext(int thread_index, uint32_t *&regs,
                                   uint16_t *&pc) {
   regs = m_dpu->ThreadContextRegs(thread_index);
   pc = m_dpu->ThreadContextPC(thread_index);
+}
+
+void ProcessDpu::GetThreadState(int thread_index, std::string &description, lldb::StopReason &stop_reason) {
+  m_dpu->GetThreadState(thread_index, description, stop_reason);
 }

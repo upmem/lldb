@@ -192,7 +192,7 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
     return StateType::eStateRunning;
   }
 
-  dpu_cni_extract_pcs_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+  dpu_cni_initialize_fault_process_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
   dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
   *exit_status = m_context.registers[lldb_private::r21_dpu];
 
@@ -218,8 +218,8 @@ bool Dpu::StopThreads() {
   // TODO: we can be more opportunistic here and just invalidate the
   // RegisterContext cache, then do this (long) read only if the debugger asks
   // for a register context
-  int ret1 =
-      dpu_cni_extract_pcs_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+  int ret1 = dpu_cni_initialize_fault_process_for_dpu(m_link, m_slice_id,
+                                                      m_dpu_id, &m_context);
   int ret2 =
       dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
   return ret1 == DPU_CNI_SUCCESS && ret2 == DPU_CNI_SUCCESS;
@@ -299,4 +299,25 @@ uint32_t *Dpu::ThreadContextRegs(int thread_index) {
 
 uint16_t *Dpu::ThreadContextPC(int thread_index) {
   return m_context.pcs + thread_index;
+}
+
+void Dpu::GetThreadState(int thread_index, std::string &description, lldb::StopReason &stop_reason) {
+  if (m_context.bkp_fault && m_context.bkp_fault_thread_index == thread_index) {
+    description = "breakpoint hit";
+    stop_reason = eStopReasonBreakpoint;
+  } else if (m_context.dma_fault && m_context.dma_fault_thread_index == thread_index) {
+    description = "dma fault";
+    stop_reason = eStopReasonException;
+  } else if (m_context.mem_fault && m_context.mem_fault_thread_index == thread_index) {
+    description = "memory fault";
+    stop_reason = eStopReasonException;
+  } else if (m_context.scheduling[thread_index] != 0xff) {
+    description = "suspended";
+    stop_reason = eStopReasonSignal;
+  } else if (m_context.pcs[thread_index] != 0) {
+    description = "stopped";
+    stop_reason = eStopReasonNone;
+  } else {
+    stop_reason = eStopReasonNone;
+  }
 }

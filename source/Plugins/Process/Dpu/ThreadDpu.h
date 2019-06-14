@@ -64,7 +64,6 @@ private:
   // Member Variables
   // ---------------------------------------------------------------------
   int m_thread_index;
-  lldb::StateType m_state;
   std::unique_ptr<RegisterContextDpu> m_reg_context_up;
 };
 } // namespace process_dpu
