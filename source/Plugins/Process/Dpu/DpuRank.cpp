@@ -192,7 +192,8 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
     return StateType::eStateRunning;
   }
 
-  dpu_cni_initialize_fault_process_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+  dpu_cni_initialize_fault_process_for_dpu(m_link, m_slice_id, m_dpu_id,
+                                           &m_context);
   dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
   *exit_status = m_context.registers[lldb_private::r21_dpu];
 
@@ -211,25 +212,21 @@ bool Dpu::StopThreads() {
   m_context.dma_fault = false;
   m_context.mem_fault = false;
 
-  int ret =
-      dpu_cni_stop_threads_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
-  if (ret != DPU_CNI_SUCCESS)
-    return false;
-  // TODO: we can be more opportunistic here and just invalidate the
-  // RegisterContext cache, then do this (long) read only if the debugger asks
-  // for a register context
-  int ret1 = dpu_cni_initialize_fault_process_for_dpu(m_link, m_slice_id,
-                                                      m_dpu_id, &m_context);
-  int ret2 =
+  int ret = DPU_CNI_SUCCESS;
+  ret |= dpu_cni_initialize_fault_process_for_dpu(m_link, m_slice_id, m_dpu_id,
+                                                  &m_context);
+  ret |=
       dpu_cni_extract_context_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
-  return ret1 == DPU_CNI_SUCCESS && ret2 == DPU_CNI_SUCCESS;
+  return ret == DPU_CNI_SUCCESS;
 }
 
 bool Dpu::ResumeThreads() {
   std::lock_guard<std::mutex> guard(m_rank->GetLock());
 
-  int ret =
-      dpu_cni_resume_threads_for_dpu(m_link, m_slice_id, m_dpu_id, &m_context);
+  int ret = DPU_CNI_SUCCESS;
+  ret |= dpu_cni_clear_fault_on_all(m_link);
+  ret |= dpu_cni_finalize_fault_process_for_dpu(m_link, m_slice_id, m_dpu_id,
+                                                &m_context);
 
   dpu_is_running = true;
   return ret == DPU_CNI_SUCCESS;
