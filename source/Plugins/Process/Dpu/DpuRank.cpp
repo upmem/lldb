@@ -138,6 +138,7 @@ bool Dpu::Boot() {
 
 StateType Dpu::PollStatus(unsigned int *exit_status) {
   std::lock_guard<std::mutex> guard(m_rank->GetLock());
+  bool dpu_is_in_fault;
   StateType result_state = StateType::eStateRunning;
 
   if (!dpu_is_running)
@@ -145,15 +146,14 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
 
   dpu_poll_dpu(m_dpu, &dpu_is_running, &dpu_is_in_fault);
   if (dpu_is_in_fault) {
-    dpu_is_running = false;
     result_state = StateType::eStateStopped;
+    dpu_initialize_fault_process_for_dpu(m_dpu, &m_context);
   } else if (!dpu_is_running) {
     result_state = StateType::eStateExited;
   } else {
     return StateType::eStateRunning;
   }
 
-  dpu_initialize_fault_process_for_dpu(m_dpu, &m_context);
   dpu_extract_context_for_dpu(m_dpu, &m_context);
   *exit_status = m_context.registers[lldb_private::r21_dpu];
 
@@ -164,6 +164,7 @@ bool Dpu::StopThreads() {
   std::lock_guard<std::mutex> guard(m_rank->GetLock());
 
   dpu_is_running = false;
+
   for (dpu_thread_t each_thread = 0; each_thread < nr_threads; ++each_thread) {
     m_context.scheduling[each_thread] = 0xFF;
   }
@@ -180,6 +181,10 @@ bool Dpu::StopThreads() {
 
 bool Dpu::ResumeThreads() {
   std::lock_guard<std::mutex> guard(m_rank->GetLock());
+
+  if (m_context.dma_fault || m_context.mem_fault) {
+    return false;
+  }
 
   int ret = DPU_API_SUCCESS;
   ret |= dpu_clear_fault_on_dpu(m_dpu);
@@ -255,26 +260,15 @@ lldb::StateType Dpu::GetThreadState(int thread_index, std::string &description,
                                     lldb::StopReason &stop_reason) {
   if (m_context.bkp_fault && m_context.bkp_fault_thread_index == thread_index) {
     description = "breakpoint hit";
-    stop_reason = eStopReasonBreakpoint;
-    return eStateStopped;
   } else if (m_context.dma_fault && m_context.dma_fault_thread_index == thread_index) {
     description = "dma fault";
-    stop_reason = eStopReasonBreakpoint;
-    return eStateStopped;
   } else if (m_context.mem_fault && m_context.mem_fault_thread_index == thread_index) {
     description = "memory fault";
-    stop_reason = eStopReasonBreakpoint;
-    return eStateStopped;
   } else if (m_context.scheduling[thread_index] != 0xff) {
     description = "suspended";
-    stop_reason = eStopReasonSignal;
-    return eStateStopped;
   } else if (m_context.pcs[thread_index] != 0) {
     description = "stopped";
-    stop_reason = eStopReasonNone;
-    return eStateStopped;
-  } else {
-    stop_reason = eStopReasonNone;
-    return eStateExited;
   }
+  stop_reason = eStopReasonNone;
+  return eStateStopped;
 }
