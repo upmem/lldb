@@ -364,9 +364,11 @@ ThreadDpu *ProcessDpu::GetThreadByID(lldb::tid_t tid) {
 }
 
 void ProcessDpu::GetThreadContext(int thread_index, uint32_t *&regs,
-                                  uint16_t *&pc) {
+                                  uint16_t *&pc, bool *&zf, bool *&cf) {
   regs = m_dpu->ThreadContextRegs(thread_index);
   pc = m_dpu->ThreadContextPC(thread_index);
+  zf = m_dpu->ThreadContextZF(thread_index);
+  cf = m_dpu->ThreadContextCF(thread_index);
 }
 
 lldb::StateType ProcessDpu::GetThreadState(int thread_index,

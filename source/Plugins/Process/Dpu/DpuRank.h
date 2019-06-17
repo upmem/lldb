@@ -80,6 +80,8 @@ public:
 
   uint32_t *ThreadContextRegs(int thread_index);
   uint16_t *ThreadContextPC(int thread_index);
+  bool *ThreadContextZF(int thread_index);
+  bool *ThreadContextCF(int thread_index);
 
   lldb::StateType GetThreadState(int thread_index, std::string &description,
                                  lldb::StopReason &stop_reason);

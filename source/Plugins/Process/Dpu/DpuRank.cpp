@@ -257,6 +257,14 @@ uint16_t *Dpu::ThreadContextPC(int thread_index) {
   return m_context.pcs + thread_index;
 }
 
+bool *Dpu::ThreadContextZF(int thread_index) {
+  return m_context.zero_flags + thread_index;
+}
+
+bool *Dpu::ThreadContextCF(int thread_index) {
+  return m_context.carry_flags + thread_index;
+}
+
 lldb::StateType Dpu::GetThreadState(int thread_index, std::string &description,
                                     lldb::StopReason &stop_reason) {
   if (m_context.bkp_fault && m_context.bkp_fault_thread_index == thread_index) {
