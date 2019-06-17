@@ -306,12 +306,12 @@ lldb::StateType Dpu::GetThreadState(int thread_index, std::string &description,
     return eStateStopped;
   } else if (m_context.dma_fault && m_context.dma_fault_thread_index == thread_index) {
     description = "dma fault";
-    stop_reason = eStopReasonException;
-    return eStateCrashed;
+    stop_reason = eStopReasonBreakpoint;
+    return eStateStopped;
   } else if (m_context.mem_fault && m_context.mem_fault_thread_index == thread_index) {
     description = "memory fault";
-    stop_reason = eStopReasonException;
-    return eStateCrashed;
+    stop_reason = eStopReasonBreakpoint;
+    return eStateStopped;
   } else if (m_context.scheduling[thread_index] != 0xff) {
     description = "suspended";
     stop_reason = eStopReasonSignal;
