@@ -30,13 +30,14 @@ using namespace lldb_private::process_dpu;
 
 ThreadDpu::ThreadDpu(ProcessDpu &process, lldb::tid_t tid, int index)
     : NativeThreadProtocol(process, tid), m_thread_index(index),
+      m_state(eStateStopped),
       m_reg_context_up(llvm::make_unique<RegisterContextDpu>(*this, process)) {}
 
 std::string ThreadDpu::GetName() {
   return "DPUthread" + llvm::to_string(m_thread_index);
 }
 
-lldb::StateType ThreadDpu::GetState() { return eStateStopped; }
+lldb::StateType ThreadDpu::GetState() { return m_state; }
 
 bool ThreadDpu::GetStopReason(ThreadStopInfo &stop_info,
                               std::string &description) {
@@ -44,7 +45,8 @@ bool ThreadDpu::GetStopReason(ThreadStopInfo &stop_info,
 
   description.clear();
   stop_info.details.signal.signo = 0;
-  GetProcess().GetThreadState(m_thread_index, description, stop_info.reason);
+  m_state = GetProcess().GetThreadState(m_thread_index, description,
+                                        stop_info.reason);
 
   return true;
 }

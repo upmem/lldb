@@ -368,6 +368,8 @@ void ProcessDpu::GetThreadContext(int thread_index, uint32_t *&regs,
   pc = m_dpu->ThreadContextPC(thread_index);
 }
 
-void ProcessDpu::GetThreadState(int thread_index, std::string &description, lldb::StopReason &stop_reason) {
-  m_dpu->GetThreadState(thread_index, description, stop_reason);
+lldb::StateType ProcessDpu::GetThreadState(int thread_index,
+                                           std::string &description,
+                                           lldb::StopReason &stop_reason) {
+  return m_dpu->GetThreadState(thread_index, description, stop_reason);
 }

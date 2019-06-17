@@ -114,7 +114,8 @@ public:
   // ---------------------------------------------------------------------
   void GetThreadContext(int thread_index, uint32_t *&regs, uint16_t *&pc);
 
-  void GetThreadState(int thread_index, std::string &description, lldb::StopReason &stop_reason);
+  lldb::StateType GetThreadState(int thread_index, std::string &description,
+                                 lldb::StopReason &stop_reason);
 
 protected:
   // ---------------------------------------------------------------------

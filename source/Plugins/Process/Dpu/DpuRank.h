@@ -83,7 +83,8 @@ public:
   uint32_t *ThreadContextRegs(int thread_index);
   uint16_t *ThreadContextPC(int thread_index);
 
-  void GetThreadState(int thread_index, std::string &description, lldb::StopReason &stop_reason);
+  lldb::StateType GetThreadState(int thread_index, std::string &description,
+                                 lldb::StopReason &stop_reason);
 
 private:
   DpuRank *m_rank;

@@ -301,23 +301,30 @@ uint16_t *Dpu::ThreadContextPC(int thread_index) {
   return m_context.pcs + thread_index;
 }
 
-void Dpu::GetThreadState(int thread_index, std::string &description, lldb::StopReason &stop_reason) {
+lldb::StateType Dpu::GetThreadState(int thread_index, std::string &description,
+                                    lldb::StopReason &stop_reason) {
   if (m_context.bkp_fault && m_context.bkp_fault_thread_index == thread_index) {
     description = "breakpoint hit";
     stop_reason = eStopReasonBreakpoint;
+    return eStateStopped;
   } else if (m_context.dma_fault && m_context.dma_fault_thread_index == thread_index) {
     description = "dma fault";
     stop_reason = eStopReasonException;
+    return eStateCrashed;
   } else if (m_context.mem_fault && m_context.mem_fault_thread_index == thread_index) {
     description = "memory fault";
     stop_reason = eStopReasonException;
+    return eStateCrashed;
   } else if (m_context.scheduling[thread_index] != 0xff) {
     description = "suspended";
     stop_reason = eStopReasonSignal;
+    return eStateStopped;
   } else if (m_context.pcs[thread_index] != 0) {
     description = "stopped";
     stop_reason = eStopReasonNone;
+    return eStateStopped;
   } else {
     stop_reason = eStopReasonNone;
+    return eStateExited;
   }
 }
