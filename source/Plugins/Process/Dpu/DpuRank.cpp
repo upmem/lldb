@@ -116,43 +116,9 @@ Dpu::~Dpu() {
 bool Dpu::LoadElf(const FileSpec &elf_file_path) {
   ModuleSP elf_mod(new Module(elf_file_path, k_dpu_arch));
 
-  ObjectFile *exe = elf_mod->GetObjectFile();
-  if (exe == nullptr)
-    return false;
-
-  const SectionList *sections = exe->GetSectionList();
-  Section *section_text =
-      sections->FindSectionByName(ConstString(".text")).get();
-  Section *section_data =
-      sections->FindSectionByName(ConstString(".data")).get();
-  if (!section_text || !section_data)
-    return false;
-
-  DataExtractor text_content;
-  exe->ReadSectionData(section_text, text_content);
-  fprintf(stderr, "text +%ld\n", text_content.GetByteSize());
-  DataExtractor data_content;
-  exe->ReadSectionData(section_data, data_content);
-  fprintf(stderr, "data +%ld\n", data_content.GetByteSize());
-
-  {
-    std::lock_guard<std::mutex> guard(m_rank->GetLock());
-
-    int res = dpu_copy_to_iram_for_dpu(
-        m_dpu, 0,
-        reinterpret_cast<const dpuinstruction_t *>(text_content.GetDataStart()),
-        text_content.GetByteSize() / sizeof(dpuinstruction_t));
-    if (res != DPU_API_SUCCESS)
-      return false;
-    res = dpu_copy_to_wram_for_dpu(
-        m_dpu, 0,
-        reinterpret_cast<const dpuword_t *>(data_content.GetDataStart()),
-        data_content.GetByteSize() / sizeof(dpuword_t));
-    if (res != DPU_API_SUCCESS)
-      return false;
-  }
-
-  return true;
+  dpu_api_status_t status =
+      dpu_load_individual(m_dpu, elf_file_path.GetCString());
+  return status == DPU_API_SUCCESS;
 }
 
 bool Dpu::Boot() {
