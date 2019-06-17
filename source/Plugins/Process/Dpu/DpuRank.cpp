@@ -146,6 +146,7 @@ StateType Dpu::PollStatus(unsigned int *exit_status) {
 
   dpu_poll_dpu(m_dpu, &dpu_is_running, &dpu_is_in_fault);
   if (dpu_is_in_fault) {
+    dpu_is_running = false;
     result_state = StateType::eStateStopped;
     dpu_initialize_fault_process_for_dpu(m_dpu, &m_context);
   } else if (!dpu_is_running) {
