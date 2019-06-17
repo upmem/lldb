@@ -144,7 +144,8 @@ ProcessDpu::ProcessDpu(::pid_t pid, int terminal_fd, NativeDelegate &delegate,
   assert(m_timer_handle && status.Success());
 
   for (int thread_id = 0; thread_id < m_dpu->GetNrThreads(); thread_id++) {
-    m_threads.push_back(llvm::make_unique<ThreadDpu>(*this, pid | thread_id, thread_id));
+    m_threads.push_back(
+        llvm::make_unique<ThreadDpu>(*this, pid | thread_id, thread_id));
   }
   SetCurrentThreadID(pid);
 
