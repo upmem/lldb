@@ -291,8 +291,8 @@ Status
 ProcessDpu::GetSoftwareBreakpointTrapOpcode(size_t trap_opcode_size_hint,
                                             size_t &actual_opcode_size,
                                             const uint8_t *&trap_opcode_bytes) {
-  static const uint8_t g_dpu_breakpoint_opcode[] = {
-      0x00, 0x00, 0x00, 0x20, 0x63, 0x7e /*, 0x00, 0x00*/};
+  static const uint8_t g_dpu_breakpoint_opcode[] = {0x00, 0x00, 0x00, 0x20,
+                                                    0x63, 0x7e, 0x00, 0x00};
 
   trap_opcode_bytes = g_dpu_breakpoint_opcode;
   actual_opcode_size = sizeof(g_dpu_breakpoint_opcode);
