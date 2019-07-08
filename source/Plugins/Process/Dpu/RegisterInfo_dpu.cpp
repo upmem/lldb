@@ -120,8 +120,8 @@ enum {
 #define DEFINE_GPR(idx, generic)                                               \
   {                                                                            \
     "r" STR(idx), nullptr, 4, ((idx)*4), eEncodingUint, eFormatHex,            \
-        {ehframe_r##idx, dwarf_r##idx, LLDB_REGNUM_GENERIC_ARG1,               \
-         LLDB_INVALID_REGNUM, gpr_r##idx},                                     \
+        {ehframe_r##idx, dwarf_r##idx, generic, gpr_r##idx,           \
+         gpr_r##idx},                                                          \
         nullptr, nullptr, nullptr, 0                                           \
   }
 
