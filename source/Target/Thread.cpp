@@ -2053,7 +2053,6 @@ Unwind *Thread::GetUnwinder() {
     case llvm::Triple::ppc64le:
     case llvm::Triple::systemz:
     case llvm::Triple::hexagon:
-    case llvm::Triple::dpu:
       m_unwinder_ap.reset(new UnwindLLDB(*this));
       break;
 
