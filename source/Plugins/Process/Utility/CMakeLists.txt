@@ -46,6 +46,7 @@ add_lldb_library(lldbPluginProcessUtility PLUGIN
   RegisterInfoPOSIX_ppc64le.cpp
   StopInfoMachException.cpp
   ThreadMemory.cpp
+  UnwindDPU.cpp
   UnwindLLDB.cpp
   UnwindMacOSXFrameBackchain.cpp
 
