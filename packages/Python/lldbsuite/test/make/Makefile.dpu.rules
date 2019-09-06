@@ -71,4 +71,4 @@ $(HOST_EXE) : $(HOST_OBJECTS)
 	gcc $^ $(HOST_LDFLAGS) -o $@
 
 %.o.host: %.c
-	gcc -DDPU_EXE="\"$(CURDIR)/$(EXE)\"" $(HOST_CFLAGS) -I$(UPMEM_HOME)/include/ $^ -c -o $@
+	gcc -DDPU_EXE="\"$(CURDIR)/$(EXE)\"" $(HOST_CFLAGS) -I$(UPMEM_HOME)/include/dpu $^ -c -o $@
