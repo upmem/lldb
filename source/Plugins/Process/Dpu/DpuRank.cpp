@@ -46,28 +46,6 @@ const ArchSpec k_dpu_arch("dpu-upmem-dpurte");
 
 DpuRank::DpuRank() : nr_threads(0), nr_dpus(0), m_lock() { m_rank = NULL; }
 
-#define DPU_DIAG_BUFFER_SIZE (1024)
-static dpu_type_t GetTypeFromDpuDiagnostic() {
-  FILE *fp;
-  char buffer[DPU_DIAG_BUFFER_SIZE];
-  dpu_type_t result = FUNCTIONAL_SIMULATOR;
-  fp = popen("dpudiagnostic", "r");
-  if (fp == NULL) {
-    return result;
-  }
-  while (fgets(buffer, DPU_DIAG_BUFFER_SIZE, fp) != NULL) {
-    if (sscanf(buffer, "test.BACKEND = %s", buffer) == 1) {
-      if (strcmp(buffer, "hw") == 0) {
-        result = HW;
-      }
-      break;
-    }
-  }
-
-  pclose(fp);
-  return result;
-}
-
 bool DpuRank::Open(llvm::StringRef profile) {
   std::lock_guard<std::mutex> guard(m_lock);
 
@@ -78,10 +56,19 @@ bool DpuRank::Open(llvm::StringRef profile) {
   } else if (args_split.first.equals("simulator")) {
     m_type = FUNCTIONAL_SIMULATOR;
   } else {
-    m_type = GetTypeFromDpuDiagnostic();
+    m_type = HW;
   }
 
-  int ret = dpu_get_rank_of_type(m_type, m_profile, &m_rank);
+  struct dpu_param_t params;
+  dpu_fill_default_params(&params);
+  params.profile = (char *)m_profile;
+  char *complete_profile = dpu_build_complete_profile_from_params(&params);
+
+  if (complete_profile == NULL)
+      return false;
+
+  int ret = dpu_get_rank_of_type(m_type, complete_profile, &m_rank);
+  free(complete_profile);
   if (ret != DPU_API_SUCCESS)
     return false;
   m_desc = dpu_get_description(m_rank);
