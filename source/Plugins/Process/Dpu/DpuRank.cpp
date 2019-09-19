@@ -51,7 +51,7 @@ bool DpuRank::Open(llvm::StringRef profile) {
 
   struct dpu_param_t params;
   dpu_fill_default_params(&params);
-  params.profile = (char *) profile.str().c_str();
+  params.profile = (char *)profile.str().c_str();
   char *complete_profile = dpu_build_complete_profile_from_params(&params);
 
   if (complete_profile == NULL)
