@@ -49,25 +49,15 @@ DpuRank::DpuRank() : nr_threads(0), nr_dpus(0), m_lock() { m_rank = NULL; }
 bool DpuRank::Open(llvm::StringRef profile) {
   std::lock_guard<std::mutex> guard(m_lock);
 
-  auto args_split = profile.split('/');
-  m_profile = strdup(args_split.second.str().c_str());
-  if (args_split.first.equals("fpga")) {
-    m_type = HW;
-  } else if (args_split.first.equals("simulator")) {
-    m_type = FUNCTIONAL_SIMULATOR;
-  } else {
-    m_type = HW;
-  }
-
   struct dpu_param_t params;
   dpu_fill_default_params(&params);
-  params.profile = (char *)m_profile;
+  params.profile = (char *) profile.str().c_str();
   char *complete_profile = dpu_build_complete_profile_from_params(&params);
 
   if (complete_profile == NULL)
       return false;
 
-  int ret = dpu_get_rank_of_type(m_type, complete_profile, &m_rank);
+  int ret = dpu_get_rank_of_type(HW, complete_profile, &m_rank);
   free(complete_profile);
   if (ret != DPU_API_SUCCESS)
     return false;
